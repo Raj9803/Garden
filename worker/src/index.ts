@@ -4,21 +4,36 @@ interface Env {
   DB: D1Database;
 }
 
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+const ALLOWED_ORIGINS = [
+  "https://garden-582.pages.dev",
+  "http://localhost:3000",
+];
 
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...cors, "Content-Type": "application/json" },
-  });
+const FLOWER_ID_PATTERN = /^-?\d+-\d+-\d+$/;
+
+function corsHeaders(request: Request) {
+  const origin = request.headers.get("Origin") ?? "";
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    Vary: "Origin",
+  };
 }
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const cors = corsHeaders(request);
+
+    function json(data: unknown, status = 200) {
+      return new Response(JSON.stringify(data), {
+        status,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: cors });
     }
@@ -92,9 +107,15 @@ export default {
           return json({ error: "Invalid body" }, 400);
         }
 
-        const { flower_id, note } = body as { flower_id: string; note: string };
+        const { flower_id, note: rawNote } = body as { flower_id: string; note: string };
 
-        if (typeof note !== "string" || note.length === 0 || note.length > 5000) {
+        if (typeof flower_id !== "string" || !FLOWER_ID_PATTERN.test(flower_id)) {
+          return json({ error: "Invalid flower_id" }, 400);
+        }
+
+        const note = typeof rawNote === "string" ? rawNote.trim() : "";
+
+        if (note.length === 0 || note.length > 5000) {
           return json({ error: "Note must be between 1 and 5000 characters" }, 400);
         }
 
