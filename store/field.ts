@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Flower, FlowerId, ChunkCoords } from '../types';
-import { generateChunkFlowers } from '../lib/generation';
+import { generateChunkFlowers, getChunkCoords } from '../lib/generation';
 import { fetchChunkFlowers } from '../lib/api';
 
 interface FieldStore {
@@ -20,12 +20,15 @@ interface FieldStore {
   setCameraPos: (pos: [number, number, number]) => void;
   updateFlowerNote: (flowerId: FlowerId, note: string) => void;
   loadChunk: (chunk: ChunkCoords) => Promise<void>;
+  retainChunks: (chunks: ChunkCoords[]) => void;
   isChunkLoaded: (chunk: ChunkCoords) => boolean;
   getFlower: (flowerId: FlowerId) => Flower | undefined;
   getNearbyFlowers: (pos: [number, number, number], radius: number) => Flower[];
   clear: () => void;
 }
 
+let activeChunks = new Set<string>();
+const requests = new Map<string, symbol>();
 export const useFieldStore = create<FieldStore>((set, get) => ({
   flowers: new Map(),
   loadedChunks: new Set(),
@@ -78,17 +81,34 @@ export const useFieldStore = create<FieldStore>((set, get) => ({
     });
   },
 
+  retainChunks: (chunks) => {
+    activeChunks = new Set(chunks.map(c => `${c.x}-${c.z}`));
+    for (const key of requests.keys()) if (!activeChunks.has(key)) requests.delete(key);
+    set(state => ({
+      flowers: new Map([...state.flowers].filter(([, flower]) => {
+        const c = getChunkCoords(flower.position[0], flower.position[2]);
+        return activeChunks.has(`${c.x}-${c.z}`);
+      })),
+      loadedChunks: new Set([...state.loadedChunks].filter(key => activeChunks.has(key))),
+    }));
+  },
+
   loadChunk: async (chunk) => {
     const chunkKey = `${chunk.x}-${chunk.z}`;
-    if (get().isChunkLoaded(chunk)) {
+    if (get().isChunkLoaded(chunk) || requests.has(chunkKey)) {
       return;
     }
 
     // Generate procedural flowers
     const proceduralFlowers = generateChunkFlowers(chunk.x, chunk.z);
+    const request = Symbol(chunkKey);
+    requests.set(chunkKey, request);
+    get().addFlowers(proceduralFlowers);
 
     // Fetch occupied flowers from API
-    const { flowers: occupiedFlowers } = await fetchChunkFlowers(chunk);
+    const { flowers: occupiedFlowers } = await fetchChunkFlowers(chunk).catch(() => ({ flowers: [] }));
+    if (requests.get(chunkKey) !== request || !activeChunks.has(chunkKey)) return;
+    requests.delete(chunkKey);
 
     // Mark occupied flowers
     const flowerMap = new Map<string, Flower>();
@@ -102,6 +122,12 @@ export const useFieldStore = create<FieldStore>((set, get) => ({
         existing.note = occupied.note;
         existing.occupied = true;
       }
+    }
+
+    // Preserve any note saved while the initial request was still in flight.
+    for (const [id, flower] of flowerMap) {
+      const current = get().flowers.get(id);
+      if (current?.occupied) flowerMap.set(id, current);
     }
 
     // Add to store
@@ -134,6 +160,8 @@ export const useFieldStore = create<FieldStore>((set, get) => ({
   },
 
   clear: () => {
+    activeChunks.clear();
+    requests.clear();
     set({
       flowers: new Map(),
       loadedChunks: new Set(),

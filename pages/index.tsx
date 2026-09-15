@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { PerspectiveCamera, Sky } from '@react-three/drei';
+import Atmosphere from '../components/Atmosphere';
 import Field from '../components/Field';
 import NoteModal from '../components/NoteModal';
 import CameraController from '../components/CameraController';
@@ -12,17 +12,27 @@ export default function Home() {
   const [showInstructions, setShowInstructions] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  useEffect(() => {
+    try { setShowInstructions(localStorage.getItem('garden-guide-minimized') !== 'true'); } catch { /* Storage may be disabled. */ }
+  }, []);
+  const toggleInstructions = useCallback(() => {
+    setShowInstructions(previous => {
+      const next = !previous;
+      try { localStorage.setItem('garden-guide-minimized', String(!next)); } catch { /* Keep the control usable without storage. */ }
+      return next;
+    });
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'h') {
-        setShowInstructions((prev) => !prev);
+      if (e.key.toLowerCase() === 'h' && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
+        toggleInstructions();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [toggleInstructions]);
 
   const { selectedFlower, setSelectedFlower, getFlower, updateFlowerNote } = useFieldStore((state) => ({
     selectedFlower: state.selectedFlower,
@@ -85,11 +95,8 @@ export default function Home() {
         inset: 0,
       }}
     >
-      <Canvas style={{ width: '100%', height: '100%' }}>
-        <ambientLight intensity={1} />
-        <directionalLight position={[10, 20, 10]} intensity={2} />
-        <PerspectiveCamera makeDefault position={[0, 12, 25]} fov={75} />
-        <Sky />
+      <Canvas dpr={[1, 1.5]} camera={{ position: [22, 4.6, 32], fov: 58, near: 0.1, far: 500 }} gl={{ antialias: true, powerPreference: 'low-power' }} style={{ width: '100%', height: '100%', touchAction: 'none' }}>
+        <Atmosphere />
         <CameraController />
         <Field onFlowerClick={handleFlowerClick} />
       </Canvas>
@@ -106,7 +113,7 @@ export default function Home() {
         />
       )}
 
-      <Instructions isVisible={showInstructions} />
+      <Instructions isVisible={showInstructions} onToggle={toggleInstructions} />
     </main>
   );
 }

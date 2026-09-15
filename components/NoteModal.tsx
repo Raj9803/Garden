@@ -35,10 +35,10 @@ const NoteModal: React.FC<NoteModalProps> = ({
     >
       <div
         style={{
-          minWidth: "480px",
+          width: "calc(100vw - 32px)",
           maxWidth: "680px",
           background: "rgba(255,255,255,.96)",
-          padding: "36px",
+          padding: "28px",
           borderRadius: "24px",
           boxShadow: "0 15px 50px rgba(0,0,0,.25)",
           display: "flex",
@@ -48,9 +48,13 @@ const NoteModal: React.FC<NoteModalProps> = ({
           textAlign: "center",
         }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Sunflower note"
       >
         <div style={{ fontSize: "32px", marginBottom: "10px" }}>🌻</div>
         <textarea
+          aria-label="Your note"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Leave your thoughts..."

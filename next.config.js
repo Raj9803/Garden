@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
+
 
   // REQUIRED for Cloudflare Pages static export
   output: "export",

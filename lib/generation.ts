@@ -1,7 +1,7 @@
 import { Flower, FlowerId, ChunkCoords } from '../types';
 
 const CHUNK_SIZE = 50;
-const FLOWERS_PER_CHUNK = 20;
+const FLOWERS_PER_CHUNK = 100;
 const SEED_MULTIPLIER = 73856093;
 const SEED_MULTIPLIER_2 = 19349663;
 const SEED_MULTIPLIER_3 = 83492791;
@@ -62,8 +62,11 @@ export function generateChunkFlowers(chunkX: number, chunkZ: number): Flower[] {
 
   for (let i = 0; i < FLOWERS_PER_CHUNK; i++) {
     const seed = baseHash + i * 31;
-    const localX = pseudoRandom(seed, 0, CHUNK_SIZE);
-    const localZ = pseudoRandom(seed + 1, 0, CHUNK_SIZE);
+    // Keep the original twenty flowers (and their saved-note locations) intact.
+    // Additional flowers use a jittered grid to avoid the old generator's diagonal bands.
+    const jitter = (n: number) => { const v = Math.sin(n * 127.1 + chunkX * 311.7 + chunkZ * 74.7) * 43758.5453; return v - Math.floor(v); };
+    const localX = i < 20 ? pseudoRandom(seed, 0, CHUNK_SIZE) : (((i - 20) % 10) + 0.15 + jitter(i) * 0.7) * 5;
+    const localZ = i < 20 ? pseudoRandom(seed + 1, 0, CHUNK_SIZE) : (Math.floor((i - 20) / 10) + 0.15 + jitter(i + 101) * 0.7) * 6.25;
     const worldX = chunkX * CHUNK_SIZE + localX;
     const worldZ = chunkZ * CHUNK_SIZE + localZ;
 
