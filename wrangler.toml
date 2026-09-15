@@ -1,0 +1,28 @@
+name = "sunflower"
+main = "worker/src/index.ts"
+
+compatibility_date = "2026-05-21"
+
+workers_dev = true
+
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sunflower"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+
+[vars]
+ENV = "production"
+
+
+[env.development]
+
+[env.development.vars]
+ENV = "development"
+
+
+[[env.development.d1_databases]]
+binding = "DB"
+database_name = "sunflower"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"

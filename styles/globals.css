@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
+}
+
+#__next {
+  width: 100%;
+  height: 100%;
+}
+
+canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;   
+}
+
+@layer components {
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+  }
+
+  .modal-content {
+    @apply bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-field-stem text-white rounded-lg font-semibold hover:opacity-90 transition-opacity;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 border-2 border-field-stem text-field-stem rounded-lg font-semibold hover:bg-field-stem hover:text-white transition-colors;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-field-stem transition-colors;
+  }
+}
+
+/* Smooth scrolling for modal content */
+.modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #4a7c59;
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #3a5c49;
+}
