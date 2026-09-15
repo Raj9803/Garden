@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { createNote } from '../lib/api';
 import { Flower } from '../types';
 import { useFieldStore } from '../store/field';
-import { v4 as uuidv4 } from 'uuid';
 
 interface WriteModalProps {
   isOpen: boolean;

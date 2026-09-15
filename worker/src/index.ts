@@ -2,6 +2,7 @@
 
 interface Env {
   DB: D1Database;
+  NOTE_RATE_LIMITER: RateLimit;
 }
 
 const ALLOWED_ORIGINS = [
@@ -100,6 +101,13 @@ export default {
 
     // POST /note
     if (url.pathname === "/note" && request.method === "POST") {
+      const clientIp = request.headers.get("CF-Connecting-IP") ?? "unknown";
+      const { success: withinLimit } = await env.NOTE_RATE_LIMITER.limit({ key: clientIp });
+
+      if (!withinLimit) {
+        return json({ error: "Too many notes, please slow down" }, 429);
+      }
+
       try {
         const body = await request.json() as any;
 

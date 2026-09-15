@@ -25,18 +25,16 @@
     "tailwindcss": "^3.4.1",
     "three": "^0.181.1",
     "typescript": "^5.3.3",
-    "uuid": "^9.0.1",
     "zustand": "^4.4.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260602.1",
+    "@cloudflare/workers-types": "^5.20260915.1",
     "@types/node": "^20.19.41",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@types/three": "^0.181.0",
-    "@types/uuid": "^9.0.7",
     "eslint": "^8.56.0",
     "eslint-config-next": "^15.1.0",
-    "wrangler": "^3.28.4"
+    "wrangler": "^4.131.2"
   }
 }
